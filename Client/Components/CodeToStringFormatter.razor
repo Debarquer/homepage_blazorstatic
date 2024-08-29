@@ -1,0 +1,153 @@
+﻿@inject HttpClient Http
+
+<div style="font-family:'Courier New'; padding:15px; border: 15px solid black;">
+@foreach(var line in lines)
+{
+    string s = "";
+    @foreach(char c in line)
+    {
+        // line = line.Replace("&", "&#38;");
+        // line = line.Replace(" ", "&nbsp;");
+        // line = line.Replace("\"", "&#34;");
+        // line = line.Replace("'", "&#39;");
+        // line = line.Replace("<", "&#60;");
+        // line = line.Replace(">", "&#62;");
+
+        if(c == '&')
+        {
+            <text>&#38;</text>
+        }
+        else if (c == ' ')
+        {
+            <text>&nbsp;</text>
+                //s += "&nbsp;";
+        }
+        else if (c == '\\')
+        {
+                <text>&#34;</text>
+            //s += "&#34;";
+        }
+        else if (c == '\'')
+        {
+                <text>&#39;</text>
+            @* s += "&#39;"; *@
+        }
+        else if (c == '<')
+        {
+                <text>&#60;</text>
+                //s += "&#60;";
+        }
+        else if (c == '>')
+        {
+                <text>&#62;</text>
+            //s += "&#62;";
+        }
+        else
+        {
+                <text>@c</text>
+
+            @* s += c; *@
+        }
+    }
+    <text><br /></text>
+    s = "";
+}
+</div>
+@* @sum; *@
+
+@code {
+    [Parameter]
+    public string Url { get; set; } = "";
+    string sum = "";
+    string debug = "";
+    List<char[]> lines = new List<char[]>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await FormatCodeToStringFromFile();
+    }
+
+    async Task FormatCodeToStringFromFile()
+    {
+        if(Url == "") {
+            debug += "No url";
+            return;
+        }
+        else
+        {
+            debug += "url: " + Url;
+        }
+
+        sum = "";
+
+        int nrOfLines = 0;
+
+        HttpResponseMessage data = new HttpResponseMessage();
+
+        try
+        {
+            string url = "sample-data/" + Url;
+            data = await Http.GetAsync(url);
+
+        }
+        catch (HttpRequestException e)
+        {
+            debug += "Http.GetAsync Exception: " + e.Message + e.HttpRequestError.ToString() + "Code " + e.StatusCode;
+            return;
+        }
+
+        debug += data.IsSuccessStatusCode + "::" + data.StatusCode;
+        var stream = data.Content.ReadAsStream();
+
+        debug += "Stream length: " + stream.Length;
+
+        String line;
+        try
+        {
+            //Pass the file path and file name to the StreamReader constructor
+            StreamReader sr = new StreamReader(stream);
+
+            //Read the first line of text
+            line = sr.ReadLine();
+            //Continue to read until you reach end of file
+            while (line != null)
+            {
+                nrOfLines++;
+
+                // Console.WriteLine("Pre: " + line);
+                // line = line.Replace("&", "&#38;");
+                // line = line.Replace(" ", "&nbsp;");
+                // line = line.Replace("\"", "&#34;");
+                // line = line.Replace("'", "&#39;");
+                // line = line.Replace("<", "&#60;");
+                // line = line.Replace(">", "&#62;");
+                // Console.WriteLine("Post: " + line);
+
+                // //write the line to console window
+                // //Console.WriteLine(line);
+
+                // sum += line + "<br>";
+
+                lines.Add(line.ToCharArray());
+
+                //Read the next line
+                line = sr.ReadLine();
+
+            }
+            //close the file
+            sr.Close();
+
+            debug += "Nr of lines: " + nrOfLines;
+            Console.WriteLine("Sum: " + sum);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Exception: " + e.Message);
+        }
+        finally
+        {
+            Console.WriteLine("Executing finally block.");
+        }
+    }
+}

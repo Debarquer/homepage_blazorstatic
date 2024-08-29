@@ -8,10 +8,9 @@
     <label>
         Calculator:
         <InputText id="calculator" @bind-Value=@input />
-        <button onclick="@CalculateResult" />
+        <button onclick="@CalculateResult">Calculate</button>
     </label>
 </div>
-<p>Input: @input</p>
 <p>Result: @result</p>
 
 @code {
