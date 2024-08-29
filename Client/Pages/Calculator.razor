@@ -1,0 +1,160 @@
+﻿@page "/calculator"
+
+<PageTitle>Calculator</PageTitle>
+
+<h1>Calculator</h1>
+
+<div>
+    <label>
+        Calculator:
+        <InputText id="calculator" @bind-Value=@input />
+        <button onclick="@CalculateResult" />
+    </label>
+</div>
+<p>Input: @input</p>
+<p>Result: @result</p>
+
+@code {
+    private string result = "";
+    private string input = "Please enter calculation.";
+
+    string operators = "+-*/()";
+
+    // private void CalculateResult(string s)
+    // {
+    //     // result = ResolveParanthesis(s.ToCharArray());
+    //     result = "2";
+    // }
+
+    private void CalculateResult()
+    {
+        // result = ResolveParanthesis(s.ToCharArray());
+        result = ResolveParanthesis(input.ToCharArray());
+    }
+
+    string ResolveParanthesis(char[] inputArray)
+    {
+        string userInput = "";
+        string s = "";
+        int nrOfLeftBrackets = 0;
+        foreach (char c in inputArray)
+        {
+            if (c == ')')
+            {
+                nrOfLeftBrackets--;
+                if (nrOfLeftBrackets == 0)
+                {
+                    Console.WriteLine("[1]" + new string(inputArray) + "->" + s);
+                    s += ResolveParanthesis((userInput).ToCharArray());
+                    Console.WriteLine("[2]" + s);
+                    userInput = "";
+                }
+            }
+            else if (c == '(')
+            {
+                s += userInput;
+                userInput = "";
+                nrOfLeftBrackets++;
+            }
+            else
+            {
+                userInput += c;
+            }
+        }
+
+        if (s == "") s = new string(inputArray);
+
+        string tmp = "";
+        tmp = Generic(operators, s.ToCharArray(), '*', ((int, int) num) => num.Item1 * num.Item2);
+        tmp = Generic(operators, tmp.ToCharArray(), '/', ((int, int) num) => num.Item1 / num.Item2);
+        tmp = Generic(operators, tmp.ToCharArray(), '+', ((int, int) num) => num.Item1 + num.Item2);
+        tmp = Generic(operators, tmp.ToCharArray(), '-', ((int, int) num) => num.Item1 - num.Item2);
+
+        s = tmp;
+
+        return s;
+    }
+
+    string Generic(string operators, char[] inputArray, char currentOp, Func<(int, int), int> opFunc)
+    {
+        int number1 = -1;
+        string userInput = "";
+        string s2 = "";
+        bool correctOperator = false;
+        char op = ' ';
+        foreach (char c in inputArray)
+        {
+            if (c == ' ')
+            {
+                if (number1 == -1)
+                {
+                    int testInt;
+                    if (!int.TryParse(userInput, out testInt)) continue;
+                    number1 = testInt;
+                    userInput = "";
+                }
+                else
+                {
+                    int testInt;
+                    if (!int.TryParse(userInput, out testInt)) continue;
+                    if (correctOperator)
+                    {
+                        // s2 += (number1 * testInt) + " ";
+                        number1 = opFunc((number1, testInt));
+                        userInput = "";
+                        correctOperator = false;
+                    }
+                    else
+                    {
+                        s2 += $"{number1} {op} ";
+                        number1 = testInt;
+                        userInput = "";
+                    }
+                }
+            }
+            else if (c == currentOp)
+            {
+                correctOperator = true;
+            }
+            else if (operators.Contains(c))
+            {
+                correctOperator = false;
+                op = c;
+            }
+            else
+            {
+                userInput += c;
+            }
+        }
+
+        if (number1 == -1)
+        {
+            s2 += userInput;
+        }
+        else
+        {
+            int testInt;
+            if (int.TryParse(userInput, out testInt))
+            {
+                if (correctOperator)
+                {
+                    s2 += opFunc((number1, testInt)) + " ";
+                    number1 = -1;
+                    userInput = "";
+                }
+                else
+                {
+                    s2 += $"{number1} {op} {userInput} ";
+                    number1 = -1;
+                    userInput = "";
+                }
+            }
+            else
+            {
+                s2 += number1 + userInput;
+            }
+        }
+
+        return s2;
+    }
+}
