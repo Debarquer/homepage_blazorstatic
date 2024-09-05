@@ -1,30 +1,232 @@
 ﻿@page "/game"
+@using BlazorApp.Client.Game
 
 <PageTitle>Game</PageTitle>
 
 <h1>Game</h1>
-
 <div>
-    <label>
-        Calculator:
-    </label>
+    <h2>Legend</h2>
+    <p>u = player m = impassable mountain g = grass t = treasure s = shop[WIP]</p>
 </div>
-<p>Result: @result</p>
+
+<div style="width: 750px; font-family:'Courier New'; padding:15px; border: 15px solid black; border-radius:15px;">
+    <table>
+@for(int x = 0; x < mapSize; x++)
+{
+    <tr>
+    @for(int y = 0; y < mapSize; y++)
+    {
+        if(x == playerPosition.row && y == playerPosition.column)
+        {
+            <td style="color:black;">u</td>
+        }
+        else
+        {
+            <td style="color:@map.map[(x, y)].Color;">@map.map[(x, y)].GFX</td>
+        }
+    }
+    </tr>
+}
+    </table>
+    <div style="width: 350px; height:125px; padding:15px; display:flex; flex-flow: row; margin:10px; background-color:antiquewhite; border-style:solid; border-width:5x; border-radius:10px;">
+        <div style="height:90px; display:flex; flex-flow: column;">
+            <div style="height:30px;"></div>
+            <button style="height:30px;" onclick="@MoveLeft">Move Left</button>
+            <div style="height:30px;"></div>
+        </div>
+        <div style="height:90px; display:flex; flex-flow: column;">
+            <button style="height:30px;" onclick="@MoveUp">Move Up</button>
+            <div style="height:30px;"></div>
+            <button style="height:30px;" onclick="@MoveDown">Move Down</button>   
+        </div>
+        <div style="height:90px; display:flex; flex-flow: column;">
+            <div style="height:30px;"></div>
+            <button style="height:30px;" onclick="@MoveRight">Move Right</button>
+            <div style="height:30px;"></div>
+        </div>
+    </div>
+
+    @if (PlayerAtShop())
+    {
+        <button>Buy stuff</button>
+    }
+</div>
+<div>
+    <h3>Stats:</h3>
+    <p>You have @playerInventory.gold gold.</p>
+    <h3>Console:</h3>
+    @foreach(string s in outputConsole.output)
+    {
+        <p>@s</p>
+    }
+</div>
 
 @code {
-    private string result = "";
-    private string input = "Please enter calculation.";
+    // private int gold;
+    public class PlayerInventory
+    {
+        public int gold;
+    }
+    public class OutputConsole
+    {
+        public List<string> output = new List<string>();
+    }
+    public class Map
+    {
+        public Dictionary<(int x, int y), Tile> map = new Dictionary<(int x, int y), Tile>();
+    }
+    // private List<string> output = new List<string>();
 
-    string operators = "+-*/()";
+    public PlayerInventory playerInventory = new PlayerInventory();
+    public OutputConsole outputConsole = new OutputConsole();
+    private List<char> traversableTypes = new List<char>() { 'g', 't', 's' };
+
+    // char[,]? map;
+    public Map map = new Map();
+
+    private int mapSize = 20;
+    private MapPosition playerPosition = new MapPosition() { row = 1, column = 1 };
+
+    public class MapPosition
+    {
+        public int row, column;
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        // map = new char[mapSize, mapSize];
+
+        Random random = new Random();
+
+        for(int x = 0; x < mapSize; x++)
+        {
+            for(int y = 0; y < mapSize; y++)
+            {
+                if (x == 0 || y == 0 || x == mapSize - 1 || y == mapSize - 1)
+                    // map[x, y] = 'm';
+                    map.map.Add((x, y), new Tile('m', "gray"));
+                else
+                {
+                    int n = random.Next(0, 100);
+                    if (n < 5)
+                    {
+                        map.map.Add((x, y), new TreasureTile('t', "gold", playerInventory, outputConsole, map, playerPosition));
+                        // map[x, y] = 't';
+                    }
+                    else if (n >= 5 && n < 7)
+                    {
+                        map.map.Add((x, y), new Tile('s', "black"));
+                        // map[x, y] = 's';
+                    }
+                    else
+                    {
+                        map.map.Add((x, y), new Tile('g', "green"));
+                        // map[x, y] = 'g';
+                    }
+                }
+            }
+        }
+
+        outputConsole.output.Add("Game initialized.");
+        outputConsole.output.Add("Welcome to the game!");
+    }
+
+    public void Move(int x, int y)
+    {
+        Console.WriteLine("Start pos: " + playerPosition);
+        if ((x < 0 && playerPosition.row > 0) || (x > 0 && playerPosition.row < mapSize - 1))
+        {
+            playerPosition.row += x;
+        }
+        if ((y < 0 && playerPosition.column > 0) || (y > 0 && playerPosition.column < mapSize - 1))
+        {
+            playerPosition.column += y;
+        }
+        Console.WriteLine("New pos: " + playerPosition);
+    }
+
+    public void MoveDown()
+    {
+        if (!IsTraversable(playerPosition.row + 1, playerPosition.column)) return;
+
+        if (playerPosition.row < mapSize - 1)
+        {
+            playerPosition.row++;
+        }
+
+        Update();
+    }
+
+    public void MoveUp()
+    {
+        if (!IsTraversable(playerPosition.row - 1, playerPosition.column)) return;
+
+        if (playerPosition.row > 0)
+        {
+            playerPosition.row--;
+        }
+
+        Update();
+    }
+
+    public void MoveLeft()
+    {
+        if (!IsTraversable(playerPosition.row, playerPosition.column - 1)) return;
+
+        if (playerPosition.column > 0)
+        {
+            playerPosition.column--;
+        }
+
+        Update();
+    }
+
+    public void MoveRight()
+    {
+        if (!IsTraversable(playerPosition.row, playerPosition.column + 1)) return;
+
+        if (playerPosition.column < mapSize - 1)
+        {
+            playerPosition.column++;
+        }
+
+        Update();
+    }
+
+    void Update()
+    {
+        Tile t = map.map[(playerPosition.row, playerPosition.column)];
+        t.OnPlayerEnter();
+
+        for(int x = 0; x < mapSize; x++)
+        {
+            for (int y = 0; y < mapSize; y++)
+            {
+                map.map[(x, y)].Update();
+            }
+        }
+    }
+
+    public bool IsTraversable(int row, int column)
+    {
+        return traversableTypes.Contains(map.map[(row, column)].GFX);
+    }
+
+    public bool PlayerAtShop()
+    {
+        return map.map[(playerPosition.row, playerPosition.column)].GFX == 's';
+    }
 
     // private void CalculateResult(string s)
-    // {
-    //     // result = ResolveParanthesis(s.ToCharArray());
-    //     result = "2";
-    // }
+        // {
+        //     // result = ResolveParanthesis(s.ToCharArray());
+        //     result = "2";
+        // }
 
-    private void CalculateResult()
-    {
+        private void CalculateResult()
+        {
         // result = ResolveParanthesis(s.ToCharArray());
     }
 }

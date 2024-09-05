@@ -3,16 +3,8 @@
 <div style="font-family:'Courier New'; padding:15px; border: 15px solid black;">
 @foreach(var line in lines)
 {
-    string s = "";
     @foreach(char c in line)
     {
-        // line = line.Replace("&", "&#38;");
-        // line = line.Replace(" ", "&nbsp;");
-        // line = line.Replace("\"", "&#34;");
-        // line = line.Replace("'", "&#39;");
-        // line = line.Replace("<", "&#60;");
-        // line = line.Replace(">", "&#62;");
-
         if(c == '&')
         {
             <text>&#38;</text>
@@ -20,40 +12,31 @@
         else if (c == ' ')
         {
             <text>&nbsp;</text>
-                //s += "&nbsp;";
         }
         else if (c == '\\')
         {
-                <text>&#34;</text>
-            //s += "&#34;";
+            <text>&#34;</text>
         }
         else if (c == '\'')
         {
-                <text>&#39;</text>
-            @* s += "&#39;"; *@
+            <text>&#39;</text>
         }
         else if (c == '<')
         {
-                <text>&#60;</text>
-                //s += "&#60;";
+            <text>&#60;</text>
         }
         else if (c == '>')
         {
-                <text>&#62;</text>
-            //s += "&#62;";
+            <text>&#62;</text>
         }
         else
         {
-                <text>@c</text>
-
-            @* s += c; *@
+            <text>@c</text>
         }
     }
     <text><br /></text>
-    s = "";
 }
 </div>
-@* @sum; *@
 
 @code {
     [Parameter]
@@ -114,20 +97,6 @@
             while (line != null)
             {
                 nrOfLines++;
-
-                // Console.WriteLine("Pre: " + line);
-                // line = line.Replace("&", "&#38;");
-                // line = line.Replace(" ", "&nbsp;");
-                // line = line.Replace("\"", "&#34;");
-                // line = line.Replace("'", "&#39;");
-                // line = line.Replace("<", "&#60;");
-                // line = line.Replace(">", "&#62;");
-                // Console.WriteLine("Post: " + line);
-
-                // //write the line to console window
-                // //Console.WriteLine(line);
-
-                // sum += line + "<br>";
 
                 lines.Add(line.ToCharArray());
 
